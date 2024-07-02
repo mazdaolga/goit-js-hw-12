@@ -12,6 +12,8 @@ const refs = {
 
 let searchQuery = '';
 let page = 1;
+let totalImages = 0;
+let loadedImages = 0;
 
 refs.form.addEventListener('submit', async e => {
   e.preventDefault();
@@ -34,17 +36,23 @@ refs.form.addEventListener('submit', async e => {
     return;
   }
 
-  page = 1;
+    page = 1;
+    loadedImages = 0;
   try {
-    const data = await getImages(searchQuery, page);
+      const data = await getImages(searchQuery, page);
+      totalImages = data.totalHits;
+      
 
     if (!data.totalHits) {
       throw new Error(
         'Sorry, there are no images matching your search query. Please try again!'
       );
     }
-    renderGallery(data, refs.gallery);
-    refs.loadMoreBtn.classList.remove('hidden');
+      renderGallery(data, refs.gallery);
+      loadedImages += data.hits.length;
+      if (loadedImages < totalImages) {
+          refs.loadMoreBtn.classList.remove('hidden');
+      }
   } catch (error) {
     iziToast.error({
       title: 'Error!',
@@ -66,8 +74,10 @@ refs.loadMoreBtn.addEventListener('click', async () => {
   refs.loader.classList.remove('hidden');
   try {
     const data = await getImages(searchQuery, page);
+    renderGallery(data, refs.gallery);
+    loadedImages += data.hits.length;
 
-    if (!data.hits.length) {
+    if (loadedImages >= totalImages) {
       refs.loadMoreBtn.classList.add('hidden');
       iziToast.info({
         title: 'Info',
@@ -77,8 +87,6 @@ refs.loadMoreBtn.addEventListener('click', async () => {
         close: false,
         displayMode: 1,
       });
-    } else {
-      renderGallery(data, refs.gallery);
     }
   } catch (error) {
     iziToast.error({
@@ -93,12 +101,14 @@ refs.loadMoreBtn.addEventListener('click', async () => {
     refs.loader.classList.add('hidden');
   }
 
-  const { height: cardHeight } = refs.gallery
-    .firstElementChild.getBoundingClientRect();
+  const { height: cardHeight } = refs.gallery.firstElementChild.getBoundingClientRect();
 
   window.scrollBy({
     top: cardHeight * 2,
     behavior: 'smooth',
   });
 });
+
+
+
 

@@ -29,6 +29,6 @@ export default function renderGallery(data, tagToInsert) {
     )
     .join('');
 
-  tagToInsert.innerHTML += markup;
+  tagToInsert.insertAdjacentHTML('beforeend', markup);
   lightbox.refresh();
 }
